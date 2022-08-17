@@ -56,7 +56,7 @@ function App() {
     setFileName(postVideo.data.fileName);
   };
 
-  const handleEdit = async (event) => {
+  const handleTrim = async (event) => {
     const videoDuration = videoRef?.current?.duration;
     const postVideo = await axios.post(
       'http://localhost:4000/video/trim',
@@ -70,7 +70,11 @@ function App() {
         },
       }
     );
+    setUrl(postVideo.data.path);
+    setFileName(postVideo.data.fileName);
   };
+
+  const handleCrop = () => {};
 
   return (
     <div
@@ -79,10 +83,18 @@ function App() {
       }}
     >
       <input type="file" name="file" onChange={handleFileSelected} />
-      <video ref={videoRef} src={url} width={800} height={800} controls />
+      <video
+        ref={videoRef}
+        // onSeeking={(e) => console.log(e.target.currentTime)}
+        src={url}
+        width={800}
+        height={800}
+        controls
+      />
       <Slider
         range
         allowCross={false}
+        step={0.001}
         style={{
           height: 50,
           width: 800,
@@ -103,7 +115,8 @@ function App() {
         onChange={handleSliderChange}
       />
 
-      <button onClick={handleEdit}> Edit</button>
+      <button onClick={handleTrim}> Edit</button>
+      <button onClick={handleCrop}> Crop</button>
     </div>
   );
 }
