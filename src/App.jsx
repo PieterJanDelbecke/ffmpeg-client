@@ -4,14 +4,24 @@ import Slider from 'rc-slider';
 import axios from 'axios';
 // import e from "express";
 import { useEffect, useRef, useState } from 'react';
+import Cropper from 'react-cropper';
 import 'rc-slider/assets/index.css';
+import 'cropperjs/dist/cropper.css';
 
 function App() {
   const [url, setUrl] = useState('');
   const [fileName, setFileName] = useState('');
-  const [start, setStart] = useState();
-  const [end, setEnd] = useState();
-  const videoRef = useRef();
+  const [screenShot, setScreenShot] = useState();
+  const [start, setStart] = useState(0);
+  const [end, setEnd] = useState(100);
+  const videoRef = useRef(null);
+  const cropperRef = useRef(null);
+
+  const onCrop = () => {
+    const imageElement = cropperRef?.current;
+    const cropper = imageElement?.cropper;
+    console.dir(cropper);
+  };
 
   const changeVidSeek = (value) => {
     const video = videoRef?.current;
@@ -54,14 +64,19 @@ function App() {
     );
     setUrl(postVideo.data.path);
     setFileName(postVideo.data.fileName);
+    setScreenShot(postVideo.data.imageUrl);
   };
 
   const handleTrim = async (event) => {
     const videoDuration = videoRef?.current?.duration;
+    const [trimStart, trimEnd] = getMappedRange(videoDuration, start, end);
+    const duration = trimEnd - trimStart;
+
     const postVideo = await axios.post(
       'http://localhost:4000/video/trim',
       {
-        range: getMappedRange(videoDuration, start, end),
+        start: trimStart,
+        duration,
         fileName,
       },
       {
@@ -114,7 +129,19 @@ function App() {
         defaultValue={[0, 100]}
         onChange={handleSliderChange}
       />
-
+      {screenShot && (
+        <Cropper
+          src={screenShot}
+          style={{ height: '100%', width: '100%' }}
+          // Cropper.js options
+          // initialAspectRatio={16 / 9}
+          guides={true}
+          rotatable={false}
+          zoomable={false}
+          autoCrop={true}
+          ref={cropperRef}
+        />
+      )}
       <button onClick={handleTrim}> Edit</button>
       <button onClick={handleCrop}> Crop</button>
     </div>
