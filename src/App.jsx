@@ -8,16 +8,26 @@ import 'rc-slider/assets/index.css';
 
 function App() {
   const [url, setUrl] = useState('');
+  const [fileName, setFileName] = useState('');
   const [start, setStart] = useState();
   const [end, setEnd] = useState();
   const videoRef = useRef();
 
-  const changeVidSeek = (val) => {
+  const changeVidSeek = (value) => {
     const video = videoRef?.current;
     if (!video || isNaN(video.duration)) return;
-    const vidLegth = video.duration;
-    const sector = vidLegth / 100;
-    videoRef.current.currentTime = sector * val;
+    videoRef.current.currentTime = videoLengthMapping(video.duration, value);
+  };
+
+  const videoLengthMapping = (duration, value) => {
+    const sector = duration / 100;
+    return sector * value;
+  };
+
+  const getMappedRange = (duration, start, end) => {
+    const mappedStart = videoLengthMapping(duration, start);
+    const mappedend = videoLengthMapping(duration, end);
+    return [mappedStart, mappedend];
   };
 
   const handleSliderChange = (sliderValue) => {
@@ -43,6 +53,23 @@ function App() {
       }
     );
     setUrl(postVideo.data.path);
+    setFileName(postVideo.data.fileName);
+  };
+
+  const handleEdit = async (event) => {
+    const videoDuration = videoRef?.current?.duration;
+    const postVideo = await axios.post(
+      'http://localhost:4000/video/trim',
+      {
+        range: getMappedRange(videoDuration, start, end),
+        fileName,
+      },
+      {
+        headers: {
+          'content-Type': 'application/json',
+        },
+      }
+    );
   };
 
   return (
@@ -75,6 +102,8 @@ function App() {
         defaultValue={[0, 100]}
         onChange={handleSliderChange}
       />
+
+      <button onClick={handleEdit}> Edit</button>
     </div>
   );
 }
