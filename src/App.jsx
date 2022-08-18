@@ -87,6 +87,7 @@ function App() {
     );
     setUrl(postVideo.data.path);
     setFileName(postVideo.data.fileName);
+    setScreenShot(postVideo.data.imageUrl);
   };
 
   const handleCrop = () => {};
