@@ -3,7 +3,7 @@ import { css } from "@emotion/react";
 import Slider from "rc-slider";
 import axios from "axios";
 // import e from "express";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import Cropper from "react-cropper";
 import "rc-slider/assets/index.css";
 import "cropperjs/dist/cropper.css";
@@ -17,6 +17,10 @@ function App() {
   const videoRef = useRef(null);
   const cropperRef = useRef(null);
 
+  const handleScreenShot = () => {
+    if (videoRef?.current) setScreenShot(takeSnapshot(videoRef?.current));
+  };
+
   const changeVidSeek = (value) => {
     const video = videoRef?.current;
     if (!video || isNaN(video.duration)) return;
@@ -26,6 +30,15 @@ function App() {
   const videoLengthMapping = (duration, value) => {
     const sector = duration / 100;
     return sector * value;
+  };
+
+  const takeSnapshot = (video) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    var ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+    return canvas.toDataURL("image/jpeg", 0.5);
   };
 
   const getMappedRange = (duration, start, end) => {
@@ -58,7 +71,6 @@ function App() {
     );
     setUrl(postVideo.data.path);
     setFileName(postVideo.data.fileName);
-    setScreenShot(postVideo.data.imageUrl);
   };
 
   const handleTrim = async (event) => {
@@ -81,7 +93,6 @@ function App() {
     );
     setUrl(postVideo.data.path);
     setFileName(postVideo.data.fileName);
-    setScreenShot(postVideo.data.imageUrl);
   };
 
   const handleCrop = async () => {
@@ -154,7 +165,6 @@ function App() {
       );
       setUrl(trimCropVideo.data.path);
       setFileName(trimCropVideo.data.fileName);
-      setScreenShot(trimCropVideo.data.imageUrl);
     } catch (error) {
       console.log(error);
     }
@@ -171,7 +181,9 @@ function App() {
       </div>
       <video
         ref={videoRef}
-        // onSeeking={(e) => console.log(e.target.currentTime)}
+        crossOrigin={"Anonymous"}
+        onLoad={handleScreenShot}
+        onSeeked={handleScreenShot}
         src={url}
         width={800}
         height={800}
@@ -215,7 +227,7 @@ function App() {
       )}
       <button onClick={handleTrim}> Trim</button>
       <button onClick={handleCrop}> Crop</button>
-      <button onClick={handleTrimAndCrop}> Trip & Crop</button>
+      <button onClick={handleTrimAndCrop}> Trim & Crop</button>
     </div>
   );
 }
