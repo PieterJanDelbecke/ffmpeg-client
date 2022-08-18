@@ -88,18 +88,24 @@ function App() {
     try {
       const cropperObject = cropperRef?.current;
       const cropData = cropperObject.cropper.getData();
-      const imageData = cropperObject.cropper.getImageData()
-      const cropImageData ={
+      const imageData = cropperObject.cropper.getImageData();
+      const cropImageData = {
         x: cropData.x <= 0 ? 0 : cropData.x,
         y: cropData.y <= 0 ? 0 : cropData.y,
-        height: cropData.height >= imageData.naturalHeight ? imageData.naturalHeight : cropData.height,
-        width: cropData.width >= imageData.naturalWidth ? imageData.naturalWidth : cropData.width,
-      }
+        height:
+          cropData.height >= imageData.naturalHeight
+            ? imageData.naturalHeight
+            : cropData.height,
+        width:
+          cropData.width >= imageData.naturalWidth
+            ? imageData.naturalWidth
+            : cropData.width,
+      };
       const cropPost = await axios.post(
         "http://localhost:4000/video/crop",
         {
           fileName,
-          ...cropImageData
+          ...cropImageData,
         },
         {
           headers: {
@@ -112,13 +118,57 @@ function App() {
     }
   };
 
+  const handleTrimAndCrop = async () => {
+    try {
+      const videoDuration = videoRef?.current?.duration;
+      const [trimStart, trimEnd] = getMappedRange(videoDuration, start, end);
+      const duration = trimEnd - trimStart;
+      const cropperObject = cropperRef?.current;
+      const cropData = cropperObject.cropper.getData();
+      const imageData = cropperObject.cropper.getImageData();
+      const cropImageData = {
+        x: cropData.x <= 0 ? 0 : cropData.x,
+        y: cropData.y <= 0 ? 0 : cropData.y,
+        height:
+          cropData.height >= imageData.naturalHeight
+            ? imageData.naturalHeight
+            : cropData.height,
+        width:
+          cropData.width >= imageData.naturalWidth
+            ? imageData.naturalWidth
+            : cropData.width,
+      };
+      const trimCropVideo = await axios.post(
+        "http://localhost:4000/video/trimcrop",
+        {
+          fileName,
+          start: trimStart,
+          duration,
+          ...cropImageData,
+        },
+        {
+          headers: {
+            "content-Type": "application/json",
+          },
+        }
+      );
+      setUrl(trimCropVideo.data.path);
+      setFileName(trimCropVideo.data.fileName);
+      setScreenShot(trimCropVideo.data.imageUrl);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   return (
     <div
       style={{
         padding: 20,
       }}
     >
-      <input type="file" name="file" onChange={handleFileSelected} />
+      <div>
+        <input type="file" name="file" onChange={handleFileSelected} />
+      </div>
       <video
         ref={videoRef}
         // onSeeking={(e) => console.log(e.target.currentTime)}
@@ -163,8 +213,9 @@ function App() {
           ref={cropperRef}
         />
       )}
-      <button onClick={handleTrim}> Edit</button>
+      <button onClick={handleTrim}> Trim</button>
       <button onClick={handleCrop}> Crop</button>
+      <button onClick={handleTrimAndCrop}> Trip & Crop</button>
     </div>
   );
 }
