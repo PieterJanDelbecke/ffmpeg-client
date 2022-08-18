@@ -1,27 +1,21 @@
-import styled from '@emotion/styled';
-import { css } from '@emotion/react';
-import Slider from 'rc-slider';
-import axios from 'axios';
+import styled from "@emotion/styled";
+import { css } from "@emotion/react";
+import Slider from "rc-slider";
+import axios from "axios";
 // import e from "express";
-import { useEffect, useRef, useState } from 'react';
-import Cropper from 'react-cropper';
-import 'rc-slider/assets/index.css';
-import 'cropperjs/dist/cropper.css';
+import { useEffect, useRef, useState } from "react";
+import Cropper from "react-cropper";
+import "rc-slider/assets/index.css";
+import "cropperjs/dist/cropper.css";
 
 function App() {
-  const [url, setUrl] = useState('');
-  const [fileName, setFileName] = useState('');
+  const [url, setUrl] = useState("");
+  const [fileName, setFileName] = useState("");
   const [screenShot, setScreenShot] = useState();
   const [start, setStart] = useState(0);
   const [end, setEnd] = useState(100);
   const videoRef = useRef(null);
   const cropperRef = useRef(null);
-
-  const onCrop = () => {
-    const imageElement = cropperRef?.current;
-    const cropper = imageElement?.cropper;
-    console.dir(cropper);
-  };
 
   const changeVidSeek = (value) => {
     const video = videoRef?.current;
@@ -54,11 +48,11 @@ function App() {
   const handleFileSelected = async (event) => {
     event.preventDefault();
     const postVideo = await axios.post(
-      'http://localhost:4000/video/transcode',
+      "http://localhost:4000/video/transcode",
       { video: event.target.files[0] },
       {
         headers: {
-          'content-Type': 'multipart/form-data',
+          "content-Type": "multipart/form-data",
         },
       }
     );
@@ -73,7 +67,7 @@ function App() {
     const duration = trimEnd - trimStart;
 
     const postVideo = await axios.post(
-      'http://localhost:4000/video/trim',
+      "http://localhost:4000/video/trim",
       {
         start: trimStart,
         duration,
@@ -81,7 +75,7 @@ function App() {
       },
       {
         headers: {
-          'content-Type': 'application/json',
+          "content-Type": "application/json",
         },
       }
     );
@@ -90,7 +84,33 @@ function App() {
     setScreenShot(postVideo.data.imageUrl);
   };
 
-  const handleCrop = () => {};
+  const handleCrop = async () => {
+    try {
+      const cropperObject = cropperRef?.current;
+      const cropData = cropperObject.cropper.getData();
+      const imageData = cropperObject.cropper.getImageData()
+      const cropImageData ={
+        x: cropData.x <= 0 ? 0 : cropData.x,
+        y: cropData.y <= 0 ? 0 : cropData.y,
+        height: cropData.height >= imageData.naturalHeight ? imageData.naturalHeight : cropData.height,
+        width: cropData.width >= imageData.naturalWidth ? imageData.naturalWidth : cropData.width,
+      }
+      const cropPost = await axios.post(
+        "http://localhost:4000/video/crop",
+        {
+          fileName,
+          ...cropImageData
+        },
+        {
+          headers: {
+            "content-Type": "application/json",
+          },
+        }
+      );
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return (
     <div
@@ -125,7 +145,7 @@ function App() {
           height: 50,
           borderRadius: 5,
           width: 10,
-          backgroundColor: '#0000dd',
+          backgroundColor: "#0000dd",
         }}
         defaultValue={[0, 100]}
         onChange={handleSliderChange}
@@ -133,7 +153,7 @@ function App() {
       {screenShot && (
         <Cropper
           src={screenShot}
-          style={{ height: '100%', width: '100%' }}
+          style={{ height: 800, width: "100%" }}
           // Cropper.js options
           // initialAspectRatio={16 / 9}
           guides={true}
