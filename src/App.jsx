@@ -71,6 +71,7 @@ function App() {
     );
     setUrl(postVideo.data.path);
     setFileName(postVideo.data.fileName);
+    handleScreenShot();
   };
 
   const handleTrim = async (event) => {
@@ -93,6 +94,7 @@ function App() {
     );
     setUrl(postVideo.data.path);
     setFileName(postVideo.data.fileName);
+    handleScreenShot();
   };
 
   const handleCrop = async () => {
@@ -124,6 +126,9 @@ function App() {
           },
         }
       );
+      setUrl(cropPost.data.path);
+      setFileName(cropPost.data.fileName);
+      handleScreenShot();
     } catch (error) {
       console.log(error);
     }
@@ -165,6 +170,7 @@ function App() {
       );
       setUrl(trimCropVideo.data.path);
       setFileName(trimCropVideo.data.fileName);
+      handleScreenShot();
     } catch (error) {
       console.log(error);
     }
