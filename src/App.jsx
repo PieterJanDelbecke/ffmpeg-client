@@ -14,8 +14,17 @@ function App() {
   const [screenShot, setScreenShot] = useState();
   const [start, setStart] = useState(0);
   const [end, setEnd] = useState(100);
+  // const [aspectRatio, setAspectRatio] = useState()
   const videoRef = useRef(null);
   const cropperRef = useRef(null);
+
+  const aspectRatios = {
+    facebook: [9 / 16, 16 / 9, 1 / 1],
+    instagram: [9 / 16, 16 / 9, 1 / 1, 4 / 5],
+    twitter: [1 / 1, 2 / 1],
+    linkedIn: [9 / 16, 16 / 9, 1 / 1],
+    tiktok: [9 / 16],
+  };
 
   const handleScreenShot = () => {
     if (videoRef?.current) setScreenShot(takeSnapshot(videoRef?.current));
@@ -221,19 +230,32 @@ function App() {
       {screenShot && (
         <Cropper
           src={screenShot}
-          style={{ height: 800, width: "100%" }}
+          style={{ height: 600, width: "100%" }}
           // Cropper.js options
-          // initialAspectRatio={16 / 9}
+          // initialAspectRatio={1/ 1}
+          // aspectRatio={aspectRatio}
+          responsive={true}
           guides={true}
-          rotatable={false}
+          // rotatable={false}
           zoomable={false}
           autoCrop={true}
+          dragMode={"move"}
+          viewMode={2}
+          zoomTo={0}
+          minCropBoxHeight={20000}
+          minCropBoxWidth={20000}
+
           ref={cropperRef}
         />
       )}
       <button onClick={handleTrim}> Trim</button>
       <button onClick={handleCrop}> Crop</button>
       <button onClick={handleTrimAndCrop}> Trim & Crop</button>
+      { Object.keys(aspectRatios).map((key)=> {
+        return aspectRatios[key].map((ar)=> {
+          return <button onClick={() => cropperRef?.current?.cropper?.setAspectRatio(ar)}>{ar.toString()}</button>
+        })
+      })}
     </div>
   );
 }
