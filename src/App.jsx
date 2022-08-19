@@ -7,6 +7,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import Cropper from "react-cropper";
 import "rc-slider/assets/index.css";
 import "cropperjs/dist/cropper.css";
+import "./App.css";
 
 function App() {
   const [url, setUrl] = useState("");
@@ -14,16 +15,24 @@ function App() {
   const [screenShot, setScreenShot] = useState();
   const [start, setStart] = useState(0);
   const [end, setEnd] = useState(100);
-  // const [aspectRatio, setAspectRatio] = useState()
+  const [currentAspectRatioSelector, setCurrentAspectRatioSelector] =
+    useState();
+  const [savedAspectRatios, setSavedAspectRatios] = useState({
+    facebook: {},
+    instagram: {},
+    twitter: {},
+    linkedIn: {},
+    tiktok: {},
+  });
   const videoRef = useRef(null);
   const cropperRef = useRef(null);
 
   const aspectRatios = {
-    facebook: [9 / 16, 16 / 9, 1 / 1],
-    instagram: [9 / 16, 16 / 9, 1 / 1, 4 / 5],
-    twitter: [1 / 1, 2 / 1],
-    linkedIn: [9 / 16, 16 / 9, 1 / 1],
-    tiktok: [9 / 16],
+    facebook: ["9 / 16", "16 / 9", "1 / 1"],
+    instagram: ["9 / 16", "16 / 9", "1 / 1", "4 / 5"],
+    twitter: ["1 / 1", "2 / 1"],
+    linkedIn: ["9 / 16", "16 / 9", "1 / 1"],
+    tiktok: ["9 / 16"],
   };
 
   const handleScreenShot = () => {
@@ -65,6 +74,24 @@ function App() {
       changeVidSeek(sliderEnd);
       setEnd(sliderEnd);
     }
+  };
+
+  const handleAspectRatioSelect = (key, value) => {
+    cropperRef?.current?.cropper?.reset();
+    setCurrentAspectRatioSelector([key, value]);
+    cropperRef?.current?.cropper?.setAspectRatio(eval(value));
+  };
+
+  const saveAspectRatio = () => {
+    if (!currentAspectRatioSelector) return;
+    const [key, value] = currentAspectRatioSelector;
+    const cropData = cropperRef?.current?.cropper.getData();
+    setSavedAspectRatios((prevSavedAspectRatios) => ({
+      ...prevSavedAspectRatios,
+      [key]: {
+        [value]: cropData,
+      },
+    }));
   };
 
   const handleFileSelected = async (event) => {
@@ -110,24 +137,11 @@ function App() {
     try {
       const cropperObject = cropperRef?.current;
       const cropData = cropperObject.cropper.getData();
-      const imageData = cropperObject.cropper.getImageData();
-      const cropImageData = {
-        x: cropData.x <= 0 ? 0 : cropData.x,
-        y: cropData.y <= 0 ? 0 : cropData.y,
-        height:
-          cropData.height >= imageData.naturalHeight
-            ? imageData.naturalHeight
-            : cropData.height,
-        width:
-          cropData.width >= imageData.naturalWidth
-            ? imageData.naturalWidth
-            : cropData.width,
-      };
       const cropPost = await axios.post(
         "http://localhost:4000/video/crop",
         {
           fileName,
-          ...cropImageData,
+          ...cropData,
         },
         {
           headers: {
@@ -150,26 +164,13 @@ function App() {
       const duration = trimEnd - trimStart;
       const cropperObject = cropperRef?.current;
       const cropData = cropperObject.cropper.getData();
-      const imageData = cropperObject.cropper.getImageData();
-      const cropImageData = {
-        x: cropData.x <= 0 ? 0 : cropData.x,
-        y: cropData.y <= 0 ? 0 : cropData.y,
-        height:
-          cropData.height >= imageData.naturalHeight
-            ? imageData.naturalHeight
-            : cropData.height,
-        width:
-          cropData.width >= imageData.naturalWidth
-            ? imageData.naturalWidth
-            : cropData.width,
-      };
       const trimCropVideo = await axios.post(
         "http://localhost:4000/video/trimcrop",
         {
           fileName,
           start: trimStart,
           duration,
-          ...cropImageData,
+          ...cropData,
         },
         {
           headers: {
@@ -231,31 +232,52 @@ function App() {
         <Cropper
           src={screenShot}
           style={{ height: 600, width: "100%" }}
-          // Cropper.js options
-          // initialAspectRatio={1/ 1}
-          // aspectRatio={aspectRatio}
           responsive={true}
           guides={true}
-          // rotatable={false}
-          zoomable={false}
           autoCrop={true}
           dragMode={"move"}
           viewMode={2}
           zoomTo={0}
           minCropBoxHeight={20000}
           minCropBoxWidth={20000}
-
+          movable={true}
           ref={cropperRef}
         />
       )}
       <button onClick={handleTrim}> Trim</button>
       <button onClick={handleCrop}> Crop</button>
       <button onClick={handleTrimAndCrop}> Trim & Crop</button>
-      { Object.keys(aspectRatios).map((key)=> {
-        return aspectRatios[key].map((ar)=> {
-          return <button onClick={() => cropperRef?.current?.cropper?.setAspectRatio(ar)}>{ar.toString()}</button>
-        })
-      })}
+      <br />
+      <br />
+      {screenShot && (
+        <>
+          <button onClick={() => cropperRef?.current?.cropper?.reset()}>
+            reset Cropping
+          </button>
+          <button onClick={saveAspectRatio}>Save</button>
+        </>
+      )}
+      <br />
+      <br />
+      {Object.keys(aspectRatios).map((key) => (
+        <div>
+          {key}
+          <br />
+          {aspectRatios[key].map((ar) => (
+            <button
+              className={"show-focus"}
+              style={{
+                backgroundColor: savedAspectRatios?.[key]?.[ar] ? "red" : "",
+              }}
+              onClick={() => handleAspectRatioSelect(key, ar)}
+            >
+              {ar}
+            </button>
+          ))}
+          <br />
+          <br />
+        </div>
+      ))}
     </div>
   );
 }
