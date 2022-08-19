@@ -24,8 +24,25 @@ function App() {
     linkedIn: {},
     tiktok: {},
   });
+
+  const [instagramLimit, setInstagramLimit] = useState();
+
+  const marks =
+    instagramLimit && instagramLimit <= 100
+      ? {
+          [instagramLimit]: "instagram",
+        }
+      : {};
+
   const videoRef = useRef(null);
   const cropperRef = useRef(null);
+
+  useEffect(() => {
+    if (videoRef?.current?.duration) {
+      const mark = (100 / videoRef?.current?.duration) * 2 + start;
+      mark <= 100 && setInstagramLimit(mark);
+    }
+  }, [videoRef?.current?.duration, start]);
 
   const aspectRatios = {
     facebook: ["9 / 16", "16 / 9", "1 / 1"],
@@ -207,6 +224,7 @@ function App() {
       />
       <Slider
         range
+        marks={marks}
         allowCross={false}
         step={0.001}
         style={{
