@@ -24,9 +24,9 @@
 }
 
 .left_handle {
-  left: 0;
+  left: 50px;
 }
 
 .right_handle {
-  right: 0;
+  right: 100px;
 }

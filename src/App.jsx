@@ -6,24 +6,23 @@ function App() {
   const leftHandleRef = useRef(null);
   const rightHandleRef = useRef(null);
 
-  const handleLeftDrag = (event) => { 
-    let initialLeft = event.target.style.left ? Number(event.target.style.left.replace('px','')) : 0;
-    let newLeftHandleLeft= null;
+  const handleLeftDrag = (event) => {
+    const intialStartLeft = leftHandleRef.current.clientLeft;
     const drag = (e) => {
-      let offsetX = e.clientX - event.clientX ;
-      // if( newLeftHandleLeft < 0){
-      //   return;
-      // } else if (newLeftHandleLeft > sliderDragRef.current.clientWidth){
-      //   return;
-      // }
-      if (newLeftHandleLeft && (newLeftHandleLeft <= 0)) {
-        event.target.style.left = "0px";
-      } else {
-        console.log(offsetX, initialLeft)
-        event.target.style.left = Number(initialLeft + offsetX) + 'px';
-        newLeftHandleLeft = Number(initialLeft + offsetX);
+      let left = e.clientX - intialStartLeft;
+      const endBoundry =
+        sliderDragRef.current.clientWidth -
+        leftHandleRef.current.clientWidth * 2;
+      const rigthStarts =
+        rightHandleRef.current.offsetLeft - leftHandleRef.current.clientWidth;
+      if (left <= 0) {
+        left = 0;
+      } else if (left >= rigthStarts) {
+        left = rigthStarts;
+      } else if (left >= endBoundry) {
+        left = endBoundry;
       }
-      // console.log({pos1, pos2, offsetX});
+      leftHandleRef.current.style.left = left + "px";
     };
 
     const cleanUp = () => {
@@ -34,7 +33,21 @@ function App() {
     window.document.onmouseup = cleanUp;
   };
 
-  const handleRightDrag = () => {};
+  const handleRightDrag = (event) => {
+    const intialStartRight = rightHandleRef.current.offsetLeft;
+    const drag = (e) => {
+      console.log(e);
+      let right = e.clientX - intialStartRight;
+      rightHandleRef.current.style.right = right + "px";
+    };
+
+    const cleanUp = () => {
+      window.document.onmousemove = null;
+      window.document.onmouseup = null;
+    };
+    window.document.onmousemove = drag;
+    window.document.onmouseup = cleanUp;
+  };
 
   return (
     <>
@@ -46,7 +59,11 @@ function App() {
               onMouseDown={handleLeftDrag}
               className="handle left_handle"
             ></div>
-            <div ref={rightHandleRef} className="handle right_handle"></div>
+            <div
+              ref={rightHandleRef}
+              onMouseDown={handleRightDrag}
+              className="handle right_handle"
+            ></div>
           </div>
         </div>
       </div>
