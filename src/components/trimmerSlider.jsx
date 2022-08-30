@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from "react";
 
-function TrimmerSlider({onChange}) {
+function TrimmerSlider({ onChange }) {
   const sliderContainerRef = useRef(null);
   const sliderDragRef = useRef(null);
   const leftHandleRef = useRef(null);
@@ -20,14 +20,13 @@ function TrimmerSlider({onChange}) {
 
   const setRangeHelper = () => {
     const width = sliderDragRef.current?.clientWidth;
-    const from = (getPercentage(sliderDragRef.current?.offsetLeft)).toFixed(3);
-    const to = (getPercentage(width + sliderDragRef.current?.offsetLeft)).toFixed(3);
+    const from = getPercentage(sliderDragRef.current?.offsetLeft).toFixed(3);
+    const to = getPercentage(width + sliderDragRef.current?.offsetLeft).toFixed(
+      3
+    );
     setRange([from, to]);
-    onChange([Number(from), Number(to)])
+    onChange([Number(from), Number(to)]);
   };
-  // useEffect(() => {
-  //   console.log(sliderDragRef.current?.clientWidth);
-  // }, [sliderDragRef.current?.clientWidth]);
 
   useEffect(() => {
     if (
@@ -40,18 +39,18 @@ function TrimmerSlider({onChange}) {
       sliderDragRef.current.style.right =
         getPercentage(
           sliderContainerRef.current.clientWidth -
-            rightHandleRef.current.offsetLeft
+            rightHandleRef.current.offsetLeft -
+            rightHandleRef.current.clientWidth
         ) + "%";
     }
   }, [leftHandleRef.current, rightHandleRef.current]);
 
   const handleLeftDrag = (event) => {
     event.preventDefault();
-    const intialStartLeft = leftHandleRef.current.clientLeft;
+    const intialStartLeft = leftHandleRef.current.offsetLeft;
     const drag = (e) => {
       e.preventDefault();
-      let left =
-        e.clientX - intialStartLeft - leftHandleRef.current.clientWidth -9 ;
+      let left = intialStartLeft + (e.clientX - event.clientX);
       const rigthStarts =
         rightHandleRef.current.offsetLeft - leftHandleRef.current.clientWidth;
       if (left <= 0) {
@@ -70,16 +69,19 @@ function TrimmerSlider({onChange}) {
 
   const handleRightDrag = (event) => {
     event.preventDefault();
-    const dragWidth = sliderContainerRef.current.clientWidth;
-    const intialStartRight = dragWidth - rightHandleRef.current.offsetLeft;
-    const offsetLeft = rightHandleRef.current.offsetLeft;
+    const containerWidth = sliderContainerRef.current.clientWidth;
+    const intialStartRight =
+      rightHandleRef.current.offsetLeft + rightHandleRef.current.clientWidth;
+
     const drag = (e) => {
       e.preventDefault();
-      let right = offsetLeft - e.clientX + intialStartRight;
+      let right =
+        containerWidth - (intialStartRight + (e.clientX - event.clientX));
       const leftEnds =
-        dragWidth -
+        containerWidth -
         leftHandleRef.current.offsetLeft -
-        rightHandleRef.current.clientWidth * 2;
+        (leftHandleRef.current.clientWidth +
+          rightHandleRef.current.clientWidth);
       if (right <= 0) {
         right = 0;
       } else if (right >= leftEnds) {
@@ -101,16 +103,17 @@ function TrimmerSlider({onChange}) {
     const prev = event.clientX;
     const drag = (e) => {
       e.preventDefault();
-      let positionLeft = initialStart + e.clientX - prev;
+      let boundry = sliderContainerRef.current.clientWidth - dragElemWidth;
+      let positionLeft = initialStart + e.clientX - event.clientX;
       let positionRight =
         sliderContainerRef.current.clientWidth - (positionLeft + dragElemWidth);
       if (positionLeft <= 0) {
         positionLeft = 0;
-        positionRight = sliderContainerRef.current.clientWidth - dragElemWidth;
+        positionRight = boundry;
       }
       if (positionRight <= 0) {
         positionRight = 0;
-        positionLeft = sliderContainerRef.current.clientWidth - dragElemWidth;
+        positionLeft = boundry;
       }
 
       sliderDragRef.current.style.left = getPercentage(positionLeft) + "%";
