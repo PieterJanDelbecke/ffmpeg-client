@@ -10,8 +10,8 @@
 }
 
 .slider_drag {
-  position: relative;
-  width: 50%;
+  position: absolute;
+  inset: 0;
   height: 100%;
   background-color: blue;
 }
@@ -24,9 +24,9 @@
 }
 
 .left_handle {
-  left: 50px;
+  left: 0%;
 }
 
 .right_handle {
-  right: 100px;
+  right: 0%;
 }
