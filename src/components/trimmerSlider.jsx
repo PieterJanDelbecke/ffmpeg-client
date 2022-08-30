@@ -1,16 +1,19 @@
 import { useRef, useEffect, useState } from "react";
 
-function TrimmerSlider({ onChange }) {
+function TrimmerSlider({ onChange, videoLength, maxTimeLimit }) {
   const sliderContainerRef = useRef(null);
   const sliderDragRef = useRef(null);
   const leftHandleRef = useRef(null);
   const rightHandleRef = useRef(null);
+
+  const maxTimeLimitPercentage = (maxTimeLimit / videoLength) * 100;
 
   const [range, setRange] = useState([0, 100]);
 
   const cleanUp = () => {
     window.document.onmousemove = null;
     window.document.onmouseup = null;
+    setRangeHelper();
   };
 
   const getPercentage = (val) => {
@@ -32,6 +35,30 @@ function TrimmerSlider({ onChange }) {
     if (
       leftHandleRef.current &&
       rightHandleRef.current &&
+      videoLength &&
+      maxTimeLimit
+    ) {
+      leftHandleRef.current.style.left = "0%";
+      rightHandleRef.current.style.right =
+        getPercentage(
+          sliderContainerRef.current.clientWidth -
+            0 -
+            (leftHandleRef.current.offsetLeft +
+              (sliderContainerRef.current.clientWidth / 100) *
+                maxTimeLimitPercentage)
+        ) + "%";
+    }
+  }, [
+    leftHandleRef.current,
+    rightHandleRef.current,
+    videoLength,
+    maxTimeLimit,
+  ]);
+
+  useEffect(() => {
+    if (
+      leftHandleRef.current &&
+      rightHandleRef.current &&
       sliderContainerRef.current
     ) {
       sliderDragRef.current.style.left =
@@ -43,11 +70,12 @@ function TrimmerSlider({ onChange }) {
             rightHandleRef.current.clientWidth
         ) + "%";
     }
-  }, [leftHandleRef.current, rightHandleRef.current]);
+  }, [leftHandleRef.current?.offsetLeft, rightHandleRef.current?.offsetLeft]);
 
   const handleLeftDrag = (event) => {
     event.preventDefault();
     const intialStartLeft = leftHandleRef.current.offsetLeft;
+    const containerWidth = sliderContainerRef.current.clientWidth;
     const drag = (e) => {
       e.preventDefault();
       let left = intialStartLeft + (e.clientX - event.clientX);
@@ -58,9 +86,9 @@ function TrimmerSlider({ onChange }) {
       } else if (left >= rigthStarts) {
         left = rigthStarts;
       }
+
       sliderDragRef.current.style.left = getPercentage(left) + "%";
       leftHandleRef.current.style.left = getPercentage(left) + "%";
-      setRangeHelper();
     };
 
     window.document.onmousemove = drag;
@@ -87,9 +115,21 @@ function TrimmerSlider({ onChange }) {
       } else if (right >= leftEnds) {
         right = leftEnds;
       }
-      sliderDragRef.current.style.right = getPercentage(right) + "%";
-      rightHandleRef.current.style.right = getPercentage(right) + "%";
-      setRangeHelper();
+      if (
+        maxTimeLimitPercentage >
+          getPercentage(
+            rightHandleRef.current.offsetLeft +
+              rightHandleRef.current.clientWidth -
+              leftHandleRef.current.offsetLeft
+          ) ||
+        leftHandleRef.current.offsetLeft +
+          (sliderContainerRef.current.clientWidth / 100) *
+            maxTimeLimitPercentage >=
+          sliderContainerRef.current.clientWidth - right
+      ) {
+        sliderDragRef.current.style.right = getPercentage(right) + "%";
+        rightHandleRef.current.style.right = getPercentage(right) + "%";
+      }
     };
 
     window.document.onmousemove = drag;
@@ -120,7 +160,6 @@ function TrimmerSlider({ onChange }) {
       leftHandleRef.current.style.left = getPercentage(positionLeft) + "%";
       sliderDragRef.current.style.right = getPercentage(positionRight) + "%";
       rightHandleRef.current.style.right = getPercentage(positionRight) + "%";
-      setRangeHelper();
     };
 
     window.document.onmousemove = drag;

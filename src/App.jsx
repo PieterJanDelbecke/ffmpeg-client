@@ -83,7 +83,6 @@ function App() {
   };
 
   const handleSliderChange = (sliderValue) => {
-    console.log(sliderValue)
     const [sliderStart, sliderEnd] = sliderValue;
     if (start !== sliderStart) {
       changeVidSeek(sliderStart);
@@ -223,7 +222,11 @@ function App() {
         height={800}
         controls
       />
-      <TrimmerSlider onChange={handleSliderChange}/>
+      <TrimmerSlider
+        onChange={handleSliderChange}
+        videoLength={300}
+        maxTimeLimit={60}
+      />
       {/* <Slider
         range
         marks={marks}
