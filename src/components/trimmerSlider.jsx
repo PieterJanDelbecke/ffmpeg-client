@@ -48,12 +48,7 @@ function TrimmerSlider({ onChange, videoLength, maxTimeLimit }) {
                 maxTimeLimitPercentage)
         ) + "%";
     }
-  }, [
-    leftHandleRef.current,
-    rightHandleRef.current,
-    videoLength,
-    maxTimeLimit,
-  ]);
+  }, [videoLength, maxTimeLimit]);
 
   useEffect(() => {
     if (
@@ -86,7 +81,22 @@ function TrimmerSlider({ onChange, videoLength, maxTimeLimit }) {
       } else if (left >= rigthStarts) {
         left = rigthStarts;
       }
-
+      const isPercentageCorrect =
+        maxTimeLimitPercentage >
+        getPercentage(sliderDragRef.current.clientWidth);
+      const isPercentageInBound =
+        rightHandleRef.current.offsetLeft +
+          rightHandleRef.current.clientWidth -
+          (sliderContainerRef.current.clientWidth / 100) *
+            maxTimeLimitPercentage <
+        left;
+      if (!(isPercentageInBound || isPercentageCorrect)) {
+        left =
+          rightHandleRef.current.offsetLeft +
+          rightHandleRef.current.clientWidth -
+          (sliderContainerRef.current.clientWidth / 100) *
+            maxTimeLimitPercentage;
+      }
       sliderDragRef.current.style.left = getPercentage(left) + "%";
       leftHandleRef.current.style.left = getPercentage(left) + "%";
     };
@@ -115,21 +125,24 @@ function TrimmerSlider({ onChange, videoLength, maxTimeLimit }) {
       } else if (right >= leftEnds) {
         right = leftEnds;
       }
-      if (
+
+      const isPercentageCorrect =
         maxTimeLimitPercentage >
-          getPercentage(
-            rightHandleRef.current.offsetLeft +
-              rightHandleRef.current.clientWidth -
-              leftHandleRef.current.offsetLeft
-          ) ||
+        getPercentage(sliderDragRef.current.clientWidth);
+      const isPercentageInBound =
         leftHandleRef.current.offsetLeft +
           (sliderContainerRef.current.clientWidth / 100) *
             maxTimeLimitPercentage >=
-          sliderContainerRef.current.clientWidth - right
-      ) {
-        sliderDragRef.current.style.right = getPercentage(right) + "%";
-        rightHandleRef.current.style.right = getPercentage(right) + "%";
+        sliderContainerRef.current.clientWidth - right;
+      if (!(isPercentageInBound || isPercentageCorrect)) {
+        right =
+          sliderContainerRef.current.clientWidth -
+          (leftHandleRef.current.offsetLeft +
+            (sliderContainerRef.current.clientWidth / 100) *
+              maxTimeLimitPercentage);
       }
+      sliderDragRef.current.style.right = getPercentage(right) + "%";
+      rightHandleRef.current.style.right = getPercentage(right) + "%";
     };
 
     window.document.onmousemove = drag;
@@ -155,7 +168,6 @@ function TrimmerSlider({ onChange, videoLength, maxTimeLimit }) {
         positionRight = 0;
         positionLeft = boundry;
       }
-
       sliderDragRef.current.style.left = getPercentage(positionLeft) + "%";
       leftHandleRef.current.style.left = getPercentage(positionLeft) + "%";
       sliderDragRef.current.style.right = getPercentage(positionRight) + "%";

@@ -225,7 +225,7 @@ function App() {
       <TrimmerSlider
         onChange={handleSliderChange}
         videoLength={300}
-        maxTimeLimit={60}
+        maxTimeLimit={100}
       />
       {/* <Slider
         range
